@@ -8,3 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](../../tree/main)
 
 _Incoming fragments: see [.changelog/unreleased/](.changelog/unreleased/)_
+
+## [1.0.0](../../releases/tag/1.0.0) - 2026-10-26
+
+- feat: move the changelog and release scripts shared by `branchtrack` and `branchtrack-frontend` into one CLI, with reusable workflows and agent skills
+
