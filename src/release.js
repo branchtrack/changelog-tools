@@ -55,6 +55,16 @@ function topLevelBullets(content) {
   return (content.match(/^- .*/gm) || []).join('\n');
 }
 
+// `changelogTools.tagPrefix` in package.json, for repositories that tag `v1.2.3` rather than `1.2.3`.
+async function tagPrefix(cwd) {
+  try {
+    const pkg = JSON.parse(await readFile(path.join(cwd, 'package.json'), 'utf8'));
+    return pkg.changelogTools?.tagPrefix ?? '';
+  } catch {
+    return '';
+  }
+}
+
 async function updateChangelog(cwd, newVersion, bullets) {
   const changelogPath = path.join(cwd, 'CHANGELOG.md');
   const content = await readFile(changelogPath, 'utf8');
@@ -72,14 +82,17 @@ async function updateChangelog(cwd, newVersion, bullets) {
   const unreleasedBody = match[3].trim();
   const unreleasedBlock = unreleasedBody ? `\n${unreleasedBody}\n\n` : '\n';
 
-  const tagLink = unreleasedLink.replace(/tree\/[^/]+$/, `releases/tag/${newVersion}`);
+  const tag = `${await tagPrefix(cwd)}${newVersion}`;
+  const tagLink = unreleasedLink.replace(/tree\/[^/]+$/, `releases/tag/${tag}`);
   const sectionHeader = `## [${newVersion}](${tagLink}) - ${today}`;
   const sectionContent = `${bullets || `- bump version to ${newVersion} only, no changes`}\n\n`;
 
-  await writeFile(
-    changelogPath,
-    content.replace(UNRELEASED_SECTION, `${unreleasedHeader}${unreleasedBlock}${sectionHeader}\n\n${sectionContent}`),
+  const updated = content.replace(
+    UNRELEASED_SECTION,
+    `${unreleasedHeader}${unreleasedBlock}${sectionHeader}\n\n${sectionContent}`,
   );
+  // On a first release the new section ends the file, and its trailing blank line would end it too.
+  await writeFile(changelogPath, updated.replace(/\n+$/, '\n'));
 }
 
 async function moveFragments(cwd, files, newVersion) {

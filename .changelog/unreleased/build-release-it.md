@@ -1,0 +1,3 @@
+- build: release the package with release-it, tagged `v<version>` with the major tag `v1` moved along
+- feat: link a release section to a prefixed tag with `changelogTools.tagPrefix` in `package.json`
+- fix: end `CHANGELOG.md` with a single newline after a first release, instead of a trailing blank line

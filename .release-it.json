@@ -1,0 +1,26 @@
+{
+  "git": {
+    "addUntrackedFiles": true,
+    "commitMessage": "chore: release v${version}",
+    "push": true,
+    "requireBranch": "main",
+    "requireCleanWorkingDir": true,
+    "requireUpstream": true,
+    "tagAnnotation": "Release v${version}",
+    "tagMatch": "v[0-9]*.[0-9]*.[0-9]*",
+    "tagName": "v${version}"
+  },
+  "github": {
+    "release": false
+  },
+  "hooks": {
+    "after:bump": ["node bin/changelog-tools.js release ${version}"],
+    "after:release": [
+      "MAJOR=$(echo ${version} | cut -d. -f1) && git tag --force v$MAJOR && git push --force origin v$MAJOR"
+    ],
+    "before:init": ["pnpm test"]
+  },
+  "npm": {
+    "publish": true
+  }
+}

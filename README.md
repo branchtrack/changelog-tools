@@ -40,6 +40,12 @@ The repository needs a `VERSION` file holding the current version, and a `CHANGE
 }
 ```
 
+`release` links each new section to the tag named after the version. A repository whose tags carry a prefix, such as `v1.2.3`, sets it as `"tagPrefix": "v"` in the same object.
+
+## Releasing this package
+
+`pnpm release` (or `release:minor`, `release:major`) runs [release-it](https://github.com/release-it/release-it). It runs the tests, then bumps `package.json` and folds `.changelog/unreleased/` into `CHANGELOG.md` with the package's own `release` command. It then commits, tags `v<version>`, pushes and publishes to npm, and finally moves the major tag (`v1`) the reusable workflows are called by.
+
 ## Reusable workflows
 
 Fail a pull request that adds no fragment, and annotate the ones it adds. A draft, a `release/` branch and a pull request labelled `no-changelog` are skipped:

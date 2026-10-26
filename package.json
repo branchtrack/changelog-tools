@@ -32,12 +32,22 @@
     "src"
   ],
   "scripts": {
+    "release": "release-it",
+    "release:major": "release-it major",
+    "release:minor": "release-it minor",
     "test": "node --test"
   },
+  "devDependencies": {
+    "release-it": "^21.1.1"
+  },
+  "packageManager": "pnpm@12.3.4",
   "engines": {
     "node": ">=24"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "changelogTools": {
+    "tagPrefix": "v"
   }
 }

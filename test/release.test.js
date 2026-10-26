@@ -53,8 +53,20 @@ describe('release', () => {
     assert.equal(
       read(cwd, 'CHANGELOG.md'),
       `${HEADER}## [Unreleased](../../tree/main)\n\n_Incoming fragments_\n\n` +
-        `## [0.1.0](../../releases/tag/0.1.0) - ${today}\n\n- feat: start\n\n`,
+        `## [0.1.0](../../releases/tag/0.1.0) - ${today}\n\n- feat: start\n`,
     );
+  });
+
+  it('links a prefixed tag when package.json sets tagPrefix', async () => {
+    const cwd = makeRepo();
+    commit(cwd, {
+      'CHANGELOG.md': `${HEADER}## [Unreleased](../../tree/main)\n`,
+      'package.json': JSON.stringify({ changelogTools: { tagPrefix: 'v' } }),
+      '.changelog/unreleased/feat-start.md': '- feat: start\n',
+    });
+
+    await release(['1.1.0'], context(cwd));
+    assert.match(read(cwd, 'CHANGELOG.md'), /^## \[1\.1\.0\]\(\.\.\/\.\.\/releases\/tag\/v1\.1\.0\) - /m);
   });
 
   it('records a release with no fragments', async () => {
