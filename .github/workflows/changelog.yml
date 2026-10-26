@@ -1,0 +1,73 @@
+name: Changelog
+
+# Reusable: fails a pull request that adds no fragment under .changelog/unreleased/, and annotates
+# the fragments it does add. Call it from the repository's own pull request workflow:
+#
+#   on:
+#     pull_request:
+#       types: [labeled, opened, ready_for_review, reopened, synchronize, unlabeled]
+#   jobs:
+#     changelog:
+#       uses: branchtrack/changelog-tools/.github/workflows/changelog.yml@v1
+#
+# The label types matter: the `no-changelog` escape hatch is read from the event payload, so
+# labelling a pull request after opening it has to re-trigger the run. The github context is the
+# caller's, so every check below reads the caller's pull request. The CLI version is the one the
+# caller pins in its package.json.
+
+on:
+  workflow_call:
+    inputs:
+      skip-branch-prefix:
+        description: Head branches with this prefix need no fragment. Release PRs are labelled only after `opened`, and a label added by a bot re-triggers nothing.
+        type: string
+        default: release/
+
+jobs:
+  changelog:
+    name: Fragment check
+    runs-on: ubuntu-latest
+    if: ${{ !github.event.pull_request.draft && !(inputs.skip-branch-prefix != '' && startsWith(github.head_ref, inputs.skip-branch-prefix)) && !contains(github.event.pull_request.labels.*.name, 'no-changelog') }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Get changed changelog fragments
+        id: changed_fragments
+        uses: tj-actions/changed-files@v47
+        with:
+          files: .changelog/unreleased/*.md
+
+      - name: Fail if no changelog fragment added
+        if: steps.changed_fragments.outputs.any_changed == 'false'
+        run: |
+          echo "::error::No changelog fragment found in .changelog/unreleased/."
+          echo "::error::Add a file named after your branch (e.g. .changelog/unreleased/my-branch.md) with at least one bullet point describing your change."
+          echo "::error::To skip this check, add the 'no-changelog' label to your PR."
+          exit 1
+
+      - name: Setup Node.js
+        if: steps.changed_fragments.outputs.any_changed == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+
+      - name: Resolve the pinned changelog-tools
+        if: steps.changed_fragments.outputs.any_changed == 'true'
+        id: tools
+        run: |
+          VERSION=$(jq -r '.devDependencies["@branchtrack/changelog-tools"] // empty' package.json)
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error file=package.json::devDependencies must pin @branchtrack/changelog-tools to an exact version, got \"${VERSION}\"."
+            exit 1
+          fi
+          echo "package=@branchtrack/changelog-tools@${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Validate fragment format
+        if: steps.changed_fragments.outputs.any_changed == 'true'
+        env:
+          FILES: ${{ steps.changed_fragments.outputs.all_changed_files }}
+          PACKAGE: ${{ steps.tools.outputs.package }}
+        run: npx --yes "$PACKAGE" validate $FILES

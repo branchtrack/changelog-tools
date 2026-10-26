@@ -1,0 +1,43 @@
+{
+  "name": "@branchtrack/changelog-tools",
+  "version": "1.0.0",
+  "description": "Changelog fragments, release notes and version bumps for Keep a Changelog repos — a zero-dependency CLI, reusable GitHub workflows, and agent skills for writing fragments.",
+  "keywords": [
+    "agent-skills",
+    "changelog",
+    "dependabot",
+    "github-actions",
+    "keep-a-changelog",
+    "release",
+    "semver"
+  ],
+  "homepage": "https://github.com/branchtrack/changelog-tools#readme",
+  "bugs": {
+    "url": "https://github.com/branchtrack/changelog-tools/issues",
+    "email": "dev@branchtrack.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/branchtrack/changelog-tools.git"
+  },
+  "license": "MIT",
+  "author": "BranchTrack Humans (https://app.branchtrack.com/humans.txt)",
+  "type": "module",
+  "bin": {
+    "changelog-tools": "bin/changelog-tools.js"
+  },
+  "files": [
+    "bin",
+    "skills",
+    "src"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,6 @@
+- feat: move the changelog and release scripts shared by `branchtrack` and `branchtrack-frontend` into one CLI, with reusable workflows and agent skills
+  - `validate` warns about an unsorted dependency list, and `dependabot` writes one in byte order
+  - `release` keeps a blank line before the new section when `[Unreleased]` ends the file, and links the tag from any default branch
+  - `release` skips a fragment added since the last tag and deleted again, instead of failing
+  - `dependabot` writes a newly added dependency as `name (version)`, not `null → version`
+  - `notes` prints a released section as a tag message, replacing the `awk` in each tag workflow

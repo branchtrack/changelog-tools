@@ -1,0 +1,95 @@
+name: Dependabot
+
+# Reusable: writes and commits the changelog fragment for a Dependabot pull request. Call it from
+# a `pull_request_target` workflow, so the run can push to Dependabot's branch:
+#
+#   on:
+#     pull_request_target:
+#       branches: [main]
+#       # `@dependabot recreate` force-pushes over the fragment commit, so it has to be re-added.
+#       types: [opened, reopened, synchronize]
+#   jobs:
+#     changelog:
+#       uses: branchtrack/changelog-tools/.github/workflows/dependabot.yml@v1
+#       permissions:
+#         contents: write
+#         pull-requests: read
+#
+# The CLI version is the one the pull request's package.json pins.
+
+on:
+  workflow_call:
+
+jobs:
+  changelog:
+    name: Create changelog fragment
+    runs-on: ubuntu-latest
+    # The PR's author, not the event's actor: a maintainer reopening the PR must still run this.
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # fetch-metadata may refuse a PR that already carries our commit, so skip before calling it.
+      - name: Check for an existing fragment
+        id: existing
+        env:
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          if [[ -f ".changelog/unreleased/${BRANCH//\//-}.md" ]]; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fetch Dependabot metadata
+        if: steps.existing.outputs.found != 'true'
+        id: metadata
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        if: steps.existing.outputs.found != 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+
+      - name: Resolve the pinned changelog-tools
+        if: steps.existing.outputs.found != 'true'
+        id: tools
+        run: |
+          VERSION=$(jq -r '.devDependencies["@branchtrack/changelog-tools"] // empty' package.json)
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error file=package.json::devDependencies must pin @branchtrack/changelog-tools to an exact version, got \"${VERSION}\"."
+            exit 1
+          fi
+          echo "package=@branchtrack/changelog-tools@${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate changelog fragment
+        if: steps.existing.outputs.found != 'true'
+        id: generate
+        env:
+          BRANCH: ${{ github.head_ref }}
+          PACKAGE: ${{ steps.tools.outputs.package }}
+          TITLE: ${{ github.event.pull_request.title }}
+          UPDATED_DEPS: ${{ steps.metadata.outputs.updated-dependencies-json }}
+        run: |
+          PACKAGES=$(echo "$UPDATED_DEPS" | \
+            jq -r '[.[] | if .prevVersion then "\(.dependencyName) (\(.prevVersion) → \(.newVersion))" else "\(.dependencyName) (\(.newVersion))" end] | join(",")')
+          npx --yes "$PACKAGE" dependabot "$BRANCH" "$TITLE" "$PACKAGES"
+
+      - name: Commit and push fragment
+        if: steps.generate.outputs.created == 'true'
+        env:
+          FRAGMENT: ${{ steps.generate.outputs.path }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "$FRAGMENT"
+          git commit -m "chore: add changelog fragment for dependabot PR"
+          git push
