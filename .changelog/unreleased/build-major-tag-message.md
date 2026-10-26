@@ -1,0 +1,1 @@
+- build: give the moving major tag a message when releasing, so a signed-tag git config no longer stops it at the editor

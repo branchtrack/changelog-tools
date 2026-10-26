@@ -16,7 +16,7 @@
   "hooks": {
     "after:bump": ["node bin/changelog-tools.js release ${version}"],
     "after:release": [
-      "MAJOR=$(echo ${version} | cut -d. -f1) && git tag --force v$MAJOR && git push --force origin v$MAJOR"
+      "MAJOR=$(echo ${version} | cut -d. -f1) && git tag --force --message \"Release v${version}\" v$MAJOR && git push --force origin v$MAJOR"
     ],
     "before:init": ["pnpm test"]
   },
