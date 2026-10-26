@@ -1,6 +1,6 @@
 {
   "name": "@branchtrack/changelog-tools",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Changelog fragments, release notes and version bumps for Keep a Changelog repos — a zero-dependency CLI, reusable GitHub workflows, and agent skills for writing fragments.",
   "keywords": [
     "agent-skills",
