@@ -76,6 +76,17 @@ jobs:
       pull-requests: read
 ```
 
+Both take these inputs:
+
+| Input                | Default                                        | Does                                                                                                                                         |
+| -------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`               | `Fragment check` / `Create changelog fragment` | Names the job, which the check lists after your workflow and job names.                                                                      |
+| `node-version-file`  | `package.json`                                 | Where the Node to run on is declared. In `package.json`, `actions/setup-node` reads `volta.node`, `devEngines.runtime`, then `engines.node`. |
+| `node-version`       | none                                           | A Node version that overrides `node-version-file`, for a repository that declares none.                                                      |
+| `skip-branch-prefix` | `release/`                                     | `changelog.yml` only: head branches with this prefix need no fragment.                                                                       |
+
+The workflows run on the Node your repository declares because `npx` enforces your `package.json`'s `devEngines`: on any other Node it can refuse to start.
+
 ## Agent skills
 
 `skills/` holds two [agent skills](https://agentskills.io): `changelog-fragment` for writing a fragment, and `dependency-fragment` for a dependency bump. Install them from the package with the [`skills`](https://www.npmjs.com/package/skills) CLI, which pins them in `skills-lock.json`:

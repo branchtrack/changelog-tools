@@ -15,14 +15,28 @@ name: Dependabot
 #         contents: write
 #         pull-requests: read
 #
-# The CLI version is the one the pull request's package.json pins.
+# The CLI version is the one the pull request's package.json pins, and Node is the one it declares
+# there: npx enforces the caller's devEngines, so running on any other Node can fail.
 
 on:
   workflow_call:
+    inputs:
+      name:
+        description: The job's name, shown in the check after the caller's workflow and job names.
+        type: string
+        default: Create changelog fragment
+      node-version:
+        description: A Node version to run on, in place of the one node-version-file declares.
+        type: string
+        default: ""
+      node-version-file:
+        description: The file that declares the Node to run on. In package.json, actions/setup-node reads volta.node, devEngines.runtime, then engines.node.
+        type: string
+        default: package.json
 
 jobs:
   changelog:
-    name: Create changelog fragment
+    name: ${{ inputs.name }}
     runs-on: ubuntu-latest
     # The PR's author, not the event's actor: a maintainer reopening the PR must still run this.
     if: github.event.pull_request.user.login == 'dependabot[bot]'
@@ -57,7 +71,8 @@ jobs:
         if: steps.existing.outputs.found != 'true'
         uses: actions/setup-node@v7
         with:
-          node-version: lts/*
+          node-version: ${{ inputs.node-version }}
+          node-version-file: ${{ inputs.node-version-file }}
 
       - name: Resolve the pinned changelog-tools
         if: steps.existing.outputs.found != 'true'

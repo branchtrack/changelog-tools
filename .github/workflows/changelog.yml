@@ -13,11 +13,24 @@ name: Changelog
 # The label types matter: the `no-changelog` escape hatch is read from the event payload, so
 # labelling a pull request after opening it has to re-trigger the run. The github context is the
 # caller's, so every check below reads the caller's pull request. The CLI version is the one the
-# caller pins in its package.json.
+# caller pins in its package.json, and Node is the one it declares there: npx enforces the caller's
+# devEngines, so running on any other Node can fail.
 
 on:
   workflow_call:
     inputs:
+      name:
+        description: The job's name, shown in the check after the caller's workflow and job names.
+        type: string
+        default: Fragment check
+      node-version:
+        description: A Node version to run on, in place of the one node-version-file declares.
+        type: string
+        default: ""
+      node-version-file:
+        description: The file that declares the Node to run on. In package.json, actions/setup-node reads volta.node, devEngines.runtime, then engines.node.
+        type: string
+        default: package.json
       skip-branch-prefix:
         description: Head branches with this prefix need no fragment. Release PRs are labelled only after `opened`, and a label added by a bot re-triggers nothing.
         type: string
@@ -25,7 +38,7 @@ on:
 
 jobs:
   changelog:
-    name: Fragment check
+    name: ${{ inputs.name }}
     runs-on: ubuntu-latest
     if: ${{ !github.event.pull_request.draft && !(inputs.skip-branch-prefix != '' && startsWith(github.head_ref, inputs.skip-branch-prefix)) && !contains(github.event.pull_request.labels.*.name, 'no-changelog') }}
     steps:
@@ -52,7 +65,8 @@ jobs:
         if: steps.changed_fragments.outputs.any_changed == 'true'
         uses: actions/setup-node@v7
         with:
-          node-version: lts/*
+          node-version: ${{ inputs.node-version }}
+          node-version-file: ${{ inputs.node-version-file }}
 
       - name: Resolve the pinned changelog-tools
         if: steps.changed_fragments.outputs.any_changed == 'true'
