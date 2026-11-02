@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 _Incoming fragments: see [.changelog/unreleased/](.changelog/unreleased/)_
 
+## [1.2.1](../../releases/tag/v1.2.1) - 2026-11-02
+
+- feat: title a list of dependency updates by its ecosystem and count, instead of by the Dependabot group name
+
 ## [1.2.0](../../releases/tag/v1.2.0) - 2026-10-26
 
 - fix: run the reusable workflows on the Node the calling repository declares, instead of LTS Node, which failed a `devEngines` pin
