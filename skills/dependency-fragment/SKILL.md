@@ -39,12 +39,12 @@ The shape depends on how many packages changed.
 
 ### Several packages
 
-Use one top-level title per ecosystem — `- chore: update gems` or
-`- chore: update npm dependencies` — and one sub-bullet per package under it. A package with no
-previous version in the diff lists only its new version:
+Use one top-level title per ecosystem, ending in the number of packages under it —
+`- chore: update gems (<count>)` or `- chore: update npm packages (<count>)` — and one sub-bullet
+per package under it. A package with no previous version in the diff lists only its new version:
 
 ```markdown
-- chore: update npm dependencies
+- chore: update npm packages (2)
   - <package-name> (<old-version> → <new-version>)
   - <package-name> (<new-version>)
 ```
@@ -59,7 +59,7 @@ package — no title bullet, no sub-bullets:
 ```
 
 Only top-level bullets survive into the released changelog, so a generic title plus a lone
-sub-bullet would ship as `update npm dependencies` and drop the one fact worth keeping — which
+sub-bullet would ship as `update npm packages (1)` and drop the one fact worth keeping — which
 package moved.
 
 ---
@@ -70,8 +70,9 @@ package moved.
   `changelog-tools dependabot` and `changelog-tools validate` do. `@` sorts before letters, so every scoped npm package comes first (`@tanstack/react-query` precedes `dotenv`),
   and `_` sorts after `-`, digits and uppercase letters but before lowercase ones
   (`action_text-trix` precedes `actioncable`).
-- If both ecosystems are present in one fragment, keep gems under `- chore: update gems` and npm
-  packages under `- chore: update npm dependencies`, and sort each list independently.
+- If both ecosystems are present in one fragment, keep gems under `- chore: update gems (<count>)`
+  and npm packages under `- chore: update npm packages (<count>)`, and sort each list
+  independently.
 
 ---
 
@@ -80,16 +81,16 @@ package moved.
 Gems:
 
 ```markdown
-- chore: update gems
+- chore: update gems (3)
   - faraday (2.14.2 → 2.14.3)
   - nokogiri (1.19.3 → 1.19.4)
   - zeitwerk (2.7.5 → 2.8.2)
 ```
 
-npm dependencies:
+npm packages:
 
 ```markdown
-- chore: update npm dependencies
+- chore: update npm packages (3)
   - @tanstack/react-query (5.90.0 → 5.91.0)
   - eslint (10.7.0 → 10.8.0)
   - typescript (5.9.0 → 6.0.3)
@@ -106,7 +107,7 @@ A single package:
 ## Checklist
 
 - Every direct dependency from the manifest diff, plus any transitive package with a MAJOR bump in the lockfile diff.
-- Several packages: the ecosystem's title (`gems` or `npm dependencies`), one sub-bullet each.
+- Several packages: the ecosystem's title (`gems` or `npm packages`) with their count, one sub-bullet each.
 - Exactly one package: a single top-level line naming it, with no title bullet and no sub-bullets.
 - Versions in parentheses: `name (old → new)`, or `name (version)` when there is no old one.
 - Entries in byte order; `changelog-tools validate` warns about any that are not.

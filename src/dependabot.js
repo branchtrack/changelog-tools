@@ -5,25 +5,29 @@ import path from 'node:path';
 import { UNRELEASED_DIR, compareBytes, fragmentPath } from './fragments.js';
 
 // An optional conventional-commit prefix is ignored, and "bump" may be lowercased by it.
-const GROUP_TITLE = /(^|:\s)[Bb]ump\sthe\s(.+)\sgroup\swith/;
 const GROUP_TITLE_WITH_COUNT = /(^|:\s)[Bb]ump\sthe\s(.+)\sgroup\swith\s(\d+)\supdate/;
 const SINGLE_TITLE = /(^|:\s)[Bb]ump\s(.+)\sfrom\s(\S+)\sto\s(\S+)/;
 
-function fragmentContent(title, packages) {
+// What a list of several updates is titled after, by the ecosystem in "dependabot/<ecosystem>/…".
+const ECOSYSTEM_NOUNS = new Map([
+  ['bundler', 'gems'],
+  ['npm_and_yarn', 'npm packages'],
+]);
+
+function fragmentContent(title, packages, noun) {
   if (packages.length === 1) {
     return `- chore: update ${packages[0]}`;
   }
 
   if (packages.length > 1) {
-    const group = title.match(GROUP_TITLE)?.[2] ?? 'dependencies';
     const entries = [...packages].sort(compareBytes).map((entry) => `  - ${entry}`);
-    return [`- chore: update ${group} group (${packages.length} packages)`, ...entries].join('\n');
+    return [`- chore: update ${noun} (${packages.length})`, ...entries].join('\n');
   }
 
   // No metadata: fall back to the pull request title.
   const group = title.match(GROUP_TITLE_WITH_COUNT);
   if (group) {
-    return `- chore: update ${group[2]} group (${group[3]} packages)`;
+    return `- chore: update ${noun} (${group[3]})`;
   }
 
   const single = title.match(SINGLE_TITLE);
@@ -59,7 +63,7 @@ export default async function dependabot([branch, title, packages = ''], { cwd, 
     .split(',')
     .map((entry) => entry.trim())
     .filter(Boolean);
-  const content = fragmentContent(title, entries);
+  const content = fragmentContent(title, entries, ECOSYSTEM_NOUNS.get(branch.split('/')[1]) ?? 'dependencies');
 
   await mkdir(path.join(cwd, UNRELEASED_DIR), { recursive: true });
   await writeFile(path.join(cwd, fragment), `${content}\n`);

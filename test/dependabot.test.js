@@ -27,7 +27,7 @@ describe('dependabot', () => {
     assert.equal(output, `path=${fragment}\ncreated=true\n`);
   });
 
-  it('lists a group in byte order under its name', async () => {
+  it('lists npm packages in byte order under their count', async () => {
     const { cwd } = await generate([
       'dependabot/npm_and_yarn/all-npm-104fa10117',
       'chore(npm): bump the all-npm group with 4 updates',
@@ -37,7 +37,7 @@ describe('dependabot', () => {
     assert.equal(
       read(cwd, '.changelog/unreleased/dependabot-npm_and_yarn-all-npm-104fa10117.md'),
       [
-        '- chore: update all-npm group (4 packages)',
+        '- chore: update npm packages (4)',
         '  - @mapbox/mapbox-gl-geocoder (5.1.2 → 5.1.3)',
         '  - eslint-plugin-perfectionist (5.12.1 → 5.13.0)',
         '  - new-thing (1.0.0)',
@@ -47,21 +47,31 @@ describe('dependabot', () => {
     );
   });
 
-  it('calls an unnamed group dependencies', async () => {
-    const { cwd } = await generate(['dependabot/multi', 'Bump a few things', 'b (2), a (1)']);
-    assert.equal(read(cwd, '.changelog/unreleased/dependabot-multi.md'), '- chore: update dependencies group (2 packages)\n  - a (1)\n  - b (2)\n');
+  it('lists gems under their count', async () => {
+    const { cwd } = await generate(['dependabot/bundler/all-gems-0a1b2c3d4e', 'Bump the all-gems group with 2 updates', 'rails (8.0.2 → 8.1.0), faraday (2.14.2 → 2.14.3)']);
+    assert.equal(
+      read(cwd, '.changelog/unreleased/dependabot-bundler-all-gems-0a1b2c3d4e.md'),
+      '- chore: update gems (2)\n  - faraday (2.14.2 → 2.14.3)\n  - rails (8.0.2 → 8.1.0)\n',
+    );
   });
 
-  for (const [title, expected] of [
-    ['Bump the all-gems group with 26 updates', '- chore: update all-gems group (26 packages)'],
-    ['chore(ruby): bump the all-gems group across 2 directories with 3 updates', '- chore: update dependencies'],
-    ['Bump lodash from 4.17.20 to 4.17.21 in /frontend', '- chore: update lodash (4.17.20 → 4.17.21)'],
-    ['chore(npm): bump msw from 2.15.0 to 3.0.3', '- chore: update msw (2.15.0 → 3.0.3)'],
-    ['Update something', '- chore: update dependencies'],
+  it('calls another ecosystem’s packages dependencies', async () => {
+    const { cwd } = await generate(['dependabot/multi', 'Bump a few things', 'b (2), a (1)']);
+    assert.equal(read(cwd, '.changelog/unreleased/dependabot-multi.md'), '- chore: update dependencies (2)\n  - a (1)\n  - b (2)\n');
+  });
+
+  for (const [branch, title, expected] of [
+    ['dependabot/bundler/all-gems-x', 'Bump the all-gems group with 26 updates', '- chore: update gems (26)'],
+    ['dependabot/npm_and_yarn/all-npm-x', 'chore(npm): bump the all-npm group with 3 updates', '- chore: update npm packages (3)'],
+    ['dependabot/github_actions/all-actions-x', 'Bump the all-actions group with 2 updates', '- chore: update dependencies (2)'],
+    ['dependabot/bundler/all-gems-x', 'chore(ruby): bump the all-gems group across 2 directories with 3 updates', '- chore: update dependencies'],
+    ['dependabot/npm_and_yarn/frontend/lodash-4.17.21', 'Bump lodash from 4.17.20 to 4.17.21 in /frontend', '- chore: update lodash (4.17.20 → 4.17.21)'],
+    ['dependabot/npm_and_yarn/msw-3.0.3', 'chore(npm): bump msw from 2.15.0 to 3.0.3', '- chore: update msw (2.15.0 → 3.0.3)'],
+    ['dependabot/x', 'Update something', '- chore: update dependencies'],
   ]) {
     it(`falls back to the title "${title}"`, async () => {
-      const { cwd } = await generate(['dependabot/x', title]);
-      assert.equal(read(cwd, '.changelog/unreleased/dependabot-x.md'), `${expected}\n`);
+      const { cwd } = await generate([branch, title]);
+      assert.equal(read(cwd, `.changelog/unreleased/${branch.replaceAll('/', '-')}.md`), `${expected}\n`);
     });
   }
 

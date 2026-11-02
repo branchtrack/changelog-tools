@@ -1,0 +1,4 @@
+- feat: title a list of dependency updates by its ecosystem and count, instead of by the Dependabot group name
+  - `dependabot` writes `chore: update npm packages (4)`, `chore: update gems (26)` or, for another ecosystem, `chore: update dependencies (2)`
+  - the `dependency-fragment` skill uses the same titles, `update npm dependencies` becoming `update npm packages`
+  - a single-package bump keeps its one line naming the package
